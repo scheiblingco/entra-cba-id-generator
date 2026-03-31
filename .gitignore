@@ -1,0 +1,11 @@
+# Compiled binaries
+entra-cba-id-generator
+certuserid
+dist/
+
+# ACME state (contains private keys and certificates)
+.acme/
+certs/*
+
+# Go build cache
+*.test
