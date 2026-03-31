@@ -20,11 +20,9 @@ Connect with your client certificate and the tool displays every CBA mapping for
 
 ## Usage
 
-:::info
-To satisfy the TLS-ALPN-01 challenge for certificate issuance and renewal, this server must be reachable on port **443** from the internet. If you cannot run this server directly on port 443, you will need a TCP load balancer or reverse proxy in front of it to forward traffic from port 443 to the server's listening port (default 8559).
+> **Note:** To satisfy the TLS-ALPN-01 challenge for certificate issuance and renewal, this server must be reachable on port **443** from the internet. If you cannot run this server directly on port 443, you will need a TCP load balancer or reverse proxy in front of it to forward traffic from port 443 to the server's listening port (default 8559).
 
-:::warning
-This tool is intended for testing and debugging CBA configurations. It has not been extensively tested for use in production environments.
+> **Warning:** This tool is intended for testing and debugging CBA configurations. It has not been extensively tested for use in production environments.
 
 ### Binary
 
@@ -36,22 +34,24 @@ Flags:
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `-domain` | `certuserid.msft.run` | Domain to obtain a Let's Encrypt certificate for |
+| `-domain` | `localhost` | Domain to obtain a Let's Encrypt certificate for |
+| `-port` | `8559` | Port to listen on for HTTPS connections |
 | `-staging` | `false` | Use the Let's Encrypt staging environment (avoids rate limits during testing) |
+| `-local-cert` | `false` | Use a local self-signed certificate instead of obtaining one from ACME (for testing) |
 
-The server listens on port **8559**. Open `https://<domain>:8559/` in a browser (or with curl) while presenting a client certificate.
+Open `https://<domain>:<port>/` in a browser (or with curl) while presenting a client certificate.
 
 ### Docker
 
 ```bash
 docker run -d \
   -p 8559:8559 \
-  -v entra-acme:/app/.acme \
+  -v entra-acme:/.acme \
   ghcr.io/<owner>/entra-cba-id-generator:latest \
   -domain certuserid.example.com
 ```
 
-The `.acme` volume persists the Let's Encrypt account credentials and certificate across container restarts.
+The `/.acme` volume persists the Let's Encrypt account credentials and certificate across container restarts.
 
 ### Example with curl
 

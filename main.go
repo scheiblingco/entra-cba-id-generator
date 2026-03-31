@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/scheiblingco/gofn/pointers"
 	"github.com/scheiblingco/gofn/typetools"
 )
 
@@ -475,6 +476,10 @@ func main() {
 	localCert := flag.Bool("local-cert", false, "use a local self-signed certificate instead of obtaining one from ACME (for testing)")
 	challengePort := flag.Int("port", 8559, "port to listen on for HTTPS connections")
 
+	if challengePort == nil {
+		challengePort = pointers.Int(8559)
+	}
+
 	flag.Parse()
 
 	if *challengePort != 443 && !*localCert {
@@ -483,7 +488,7 @@ func main() {
 
 	if certNeedsRenewal() && !*localCert {
 		log.Println("No valid certificate found, obtaining one now...")
-		if err := obtainCert(*domain, typetools.EnsureString(challengePort), *staging); err != nil {
+		if err := obtainCert(*domain, typetools.EnsureString(*challengePort), *staging); err != nil {
 			log.Fatalf("initial certificate obtain failed: %v", err)
 		}
 		log.Println("Certificate obtained successfully.")
@@ -495,16 +500,16 @@ func main() {
 	}
 
 	server := &http.Server{
-		Addr:      ":" + typetools.EnsureString(challengePort),
+		Addr:      ":" + typetools.EnsureString(*challengePort),
 		TLSConfig: tlsConfig,
 		Handler:   http.HandlerFunc(certHandler),
 	}
 
 	if !*localCert {
-		startRenewalWorker(server, *domain, typetools.EnsureString(challengePort), *staging)
+		startRenewalWorker(server, *domain, typetools.EnsureString(*challengePort), *staging)
 	}
 
-	log.Printf("Listening on https://localhost:%s (mTLS required)", typetools.EnsureString(challengePort))
+	log.Printf("Listening on :%s (mTLS required)", typetools.EnsureString(*challengePort))
 
 	if *localCert {
 		log.Println("Using local self-signed certificate for testing.")
