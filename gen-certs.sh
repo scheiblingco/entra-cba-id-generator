@@ -49,7 +49,7 @@ openssl x509 -req \
   -CAcreateserial \
   -out "$CERTS_DIR/client.crt" \
   -days 365 \
-  -extfile <(printf "subjectAltName=email:testuser@example.com\nextendedKeyUsage=clientAuth")
+  -extfile <(printf "subjectAltName=email:testuser@example.com,otherName:1.3.6.1.4.1.311.20.2.3;UTF8:testuser@example.com\nextendedKeyUsage=clientAuth\nsubjectKeyIdentifier=hash")
 rm "$CERTS_DIR/client.csr"
 
 echo ""
