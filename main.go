@@ -475,6 +475,21 @@ func main() {
 	staging := flag.Bool("staging", false, "use Let's Encrypt staging environment")
 	localCert := flag.Bool("local-cert", false, "use a local self-signed certificate instead of obtaining one from ACME (for testing)")
 	challengePort := flag.Int("port", 8559, "port to listen on for HTTPS connections")
+	httpsRedirectPort := flag.Int("https-redirect-port", 0, "if set, listens on this port for HTTP and redirects to HTTPS")
+	httpsRedirectTargetPort := flag.Int("https-redirect-target-port", 443, "The https port to redirect to (only used if -https-redirect-port is set)")
+
+	if *httpsRedirectPort != 0 {
+		go func() {
+			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				target := fmt.Sprintf("https://%s:%d%s", r.Host, *httpsRedirectTargetPort, r.RequestURI)
+				http.Redirect(w, r, target, http.StatusMovedPermanently)
+			})
+			log.Printf("Starting HTTP to HTTPS redirect server on :%d, redirecting to port %d", *httpsRedirectPort, *httpsRedirectTargetPort)
+			if err := http.ListenAndServe(fmt.Sprintf(":%d", *httpsRedirectPort), handler); err != nil {
+				log.Fatalf("HTTP redirect server failed: %v", err)
+			}
+		}()
+	}
 
 	if challengePort == nil {
 		challengePort = pointers.Int(8559)

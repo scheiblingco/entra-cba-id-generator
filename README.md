@@ -36,6 +36,8 @@ Flags:
 |------|---------|-------------|
 | `-domain` | `localhost` | Domain to obtain a Let's Encrypt certificate for |
 | `-port` | `8559` | Port to listen on for HTTPS connections |
+| `-https-redirect-port` | `0` (disabled) | If set, listens on this port for HTTP and redirects to HTTPS |
+| `-https-redirect-target-port` | `443` | Target port for HTTPS redirection (used with `-https-redirect-port`). This should be the public-facing port, not necessarily the server's listening port. |
 | `-staging` | `false` | Use the Let's Encrypt staging environment (avoids rate limits during testing) |
 | `-local-cert` | `false` | Use a local self-signed certificate instead of obtaining one from ACME (for testing) |
 
@@ -52,6 +54,36 @@ docker run -d \
 ```
 
 The `/.acme` volume persists the Let's Encrypt account credentials and certificate across container restarts.
+
+### Docker Compose
+
+```yaml
+services:
+  entra-cba-id-generator:
+    image: ghcr.io/<owner>/entra-cba-id-generator:latest
+    command: [
+      "-domain", 
+      "certuserid.example.com"
+      # Additional flags can be added here, e.g. "-staging", "-port", etc.
+      # "-https-redirect-port", "80",
+      # "-https-redirect-target-port", "443"
+    ]
+    ports:
+      # Using an external load balancer or NAT
+      - "8559:8559"
+      # Exposing port 443 directly (not recommended, requires running as root or with CAP_NET_BIND_SERVICE)
+      # - "443:443"
+      # Optional HTTP to HTTPS redirection
+      # - "80:80"
+    volumes:
+      - entra-acme:/.acme
+    restart: unless-stopped
+
+volumes:
+  entra-acme:
+```
+
+Replace `<owner>` with the GitHub organisation or user that owns the package. Additional flags (e.g. `-staging`, `-port`) can be appended to the `command` list.
 
 ### Example with curl
 
